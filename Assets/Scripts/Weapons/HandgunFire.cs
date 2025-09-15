@@ -25,6 +25,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
     {
         gunFire.Play();
         extraCross.SetActive(true);
+        GlobalAmmo.handgunAmmoCount -= 1;
         handgun.GetComponent<Animator>().Play("HandgunFire");
         yield return new WaitForSeconds(0.5f);
         handgun.GetComponent<Animator>().Play("New State");
