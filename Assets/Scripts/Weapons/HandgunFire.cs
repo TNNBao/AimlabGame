@@ -9,6 +9,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
     [SerializeField] bool canFire = true;
     [SerializeField] GameObject extraCross;
     [SerializeField] AudioSource emptyGunSound;
+    [SerializeField] GameObject muzzleFlash;
     // Update is called once per frame
     void Update()
     {
@@ -37,7 +38,10 @@ public class NewMonoBehaviourScript : MonoBehaviour
         extraCross.SetActive(true);
         GlobalAmmo.handgunAmmoCount -= 1;
         handgun.GetComponent<Animator>().Play("HandgunFire");
-        yield return new WaitForSeconds(0.5f);
+        muzzleFlash.SetActive(true);
+        yield return new WaitForSeconds(0.04f);
+        muzzleFlash.SetActive(false);
+        yield return new WaitForSeconds(0.46f);
         handgun.GetComponent<Animator>().Play("New State");
         extraCross.SetActive(false);
         yield return new WaitForSeconds(0.1f);
