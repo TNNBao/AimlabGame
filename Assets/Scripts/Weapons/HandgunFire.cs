@@ -10,6 +10,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
     [SerializeField] GameObject extraCross;
     [SerializeField] AudioSource emptyGunSound;
     [SerializeField] GameObject muzzleFlash;
+    public float toTarget;
     // Update is called once per frame
     void Update()
     {
@@ -34,6 +35,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
 
     IEnumerator FiringGun()
     {
+        toTarget = PlayerCasting.distanceFromTarget;
         gunFire.Play();
         extraCross.SetActive(true);
         GlobalAmmo.handgunAmmoCount -= 1;
