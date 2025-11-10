@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
 
-public class NewMonoBehaviourScript : MonoBehaviour
+public class HandgunFire : MonoBehaviour
 {
     [SerializeField] AudioSource gunFire;
     [SerializeField] GameObject handgun;
