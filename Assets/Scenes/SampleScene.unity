@@ -5081,6 +5081,7 @@ MonoBehaviour:
   extraCross: {fileID: 968616673}
   emptyGunSound: {fileID: 457521289}
   muzzleFlash: {fileID: 908707971}
+  weaponDamage: 50
   toTarget: 0
 --- !u!4 &1100744401
 Transform:
@@ -10135,6 +10136,63 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1055959526}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &6033681921230190589
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2678573684500768017, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_Name
+      value: Bot
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 9.349887
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 53.991238
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343892210059902891, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1fa8ce1d9bfd03348a38b2efa56a6dc7, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -10149,3 +10207,4 @@ SceneRoots:
   - {fileID: 1055959526}
   - {fileID: 1195885133}
   - {fileID: 1582061545}
+  - {fileID: 6033681921230190589}

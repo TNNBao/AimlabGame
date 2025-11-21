@@ -10,6 +10,7 @@ public class HandgunFire : MonoBehaviour
     [SerializeField] GameObject extraCross;
     [SerializeField] AudioSource emptyGunSound;
     [SerializeField] GameObject muzzleFlash;
+    [SerializeField] float weaponDamage = 50f;
     public float toTarget;
     // Update is called once per frame
     void Update()
@@ -41,6 +42,18 @@ public class HandgunFire : MonoBehaviour
         GlobalAmmo.handgunAmmoCount -= 1;
         handgun.GetComponent<Animator>().Play("HandgunFire");
         muzzleFlash.SetActive(true);
+
+        GameObject target = PlayerCasting.targetObject;
+        if (target != null)
+        {
+            // Thử lấy component BotHitbox từ vật thể bị bắn trúng
+            BotHitbox hitbox = target.GetComponent<BotHitbox>();
+            if (hitbox != null)
+            {
+                hitbox.OnHit(weaponDamage);
+            }
+        }
+
         yield return new WaitForSeconds(0.04f);
         muzzleFlash.SetActive(false);
         yield return new WaitForSeconds(0.46f);
