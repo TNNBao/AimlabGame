@@ -43,6 +43,8 @@ public class HandgunFire : MonoBehaviour
         handgun.GetComponent<Animator>().Play("HandgunFire");
         muzzleFlash.SetActive(true);
 
+        GameManager.Instance.RegisterShot();
+
         GameObject target = PlayerCasting.targetObject;
         if (target != null)
         {
@@ -51,6 +53,7 @@ public class HandgunFire : MonoBehaviour
             if (hitbox != null)
             {
                 hitbox.OnHit(weaponDamage);
+                GameManager.Instance.RegisterHit();
             }
         }
 

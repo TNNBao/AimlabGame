@@ -26,6 +26,7 @@ public class BotHealth : MonoBehaviour
     {
         // Sau này sẽ thêm logic spawn bot mới ở đây
         Debug.Log("Bot đã bị tiêu diệt!");
+        GameManager.Instance.RegisterKill();
         Destroy(gameObject);
     }
 }
