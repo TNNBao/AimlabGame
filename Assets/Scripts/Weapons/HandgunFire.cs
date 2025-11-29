@@ -12,7 +12,7 @@ public class HandgunFire : MonoBehaviour
     [SerializeField] GameObject muzzleFlash;
     [SerializeField] float weaponDamage = 50f;
     public float toTarget;
-    // Update is called once per frame
+
     void Update()
     {
         if (Mouse.current.leftButton.isPressed)
@@ -29,13 +29,13 @@ public class HandgunFire : MonoBehaviour
                     canFire = false;
                     StartCoroutine(FiringGun());
                 }
-                
             }
         }
     }
 
     IEnumerator FiringGun()
     {
+        // 1. Xử lý hiệu ứng bắn trước
         toTarget = PlayerCasting.distanceFromTarget;
         gunFire.Play();
         extraCross.SetActive(true);
@@ -43,17 +43,28 @@ public class HandgunFire : MonoBehaviour
         handgun.GetComponent<Animator>().Play("HandgunFire");
         muzzleFlash.SetActive(true);
 
+        // Báo GameManager là đã bắn 1 viên (chỉ tính nếu game đang chạy)
         GameManager.Instance.RegisterShot();
 
+        // 2. Kiểm tra trúng cái gì
         GameObject target = PlayerCasting.targetObject;
         if (target != null)
         {
-            // Thử lấy component BotHitbox từ vật thể bị bắn trúng
-            BotHitbox hitbox = target.GetComponent<BotHitbox>();
-            if (hitbox != null)
+            // --- [LOGIC MỚI: Ưu tiên kiểm tra nút bấm] ---
+            MenuButton button = target.GetComponent<MenuButton>();
+            if (button != null)
             {
-                hitbox.OnHit(weaponDamage);
-                GameManager.Instance.RegisterHit();
+                button.OnHit(); // Kích hoạt nút (Start hoặc Cancel)
+            }
+            else 
+            {
+                // Nếu không phải nút thì mới kiểm tra xem có phải Bot không
+                BotHitbox hitbox = target.GetComponent<BotHitbox>();
+                if (hitbox != null)
+                {
+                    hitbox.OnHit(weaponDamage);
+                    GameManager.Instance.RegisterHit();
+                }
             }
         }
 
