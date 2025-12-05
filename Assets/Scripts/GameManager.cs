@@ -1,38 +1,41 @@
 using UnityEngine;
-using UnityEngine.UI; 
-using System.Collections;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance; 
+    public static GameManager Instance;
 
-    [Header("Setup")]
-    public GameObject botPrefab;       
-    public Collider spawnArea;         
-    public GameUI gameUI; 
+    [Header("--- GENERAL SETUP ---")]
+    public bool isDotScene = false; 
+    public Collider spawnArea;
+    public GameUI gameUI;
+    [Range(1, 2)] public int selectedMode = 1;
 
-    [Header("Game Mode Configuration")] 
-    public int selectedMode = 1; // Chỉnh tay số 1 hoặc 2 ở đây trong Inspector
+    [Header("--- BOT SETTINGS ---")]
+    public GameObject botPrefab;
+    public int botMode1TotalSpawns = 30; // Mode 1: Giới hạn số lần xuất hiện
+    public float botMode1Duration = 1.5f; // Thời gian tồn tại của bot Mode 1
+    public int botMode2TargetKills = 50;  // Mode 2: Giới hạn số kill
 
-    [Header("Mode 1 Settings (Reflex)")]
-    public int mode1TotalBots = 30;     // Tổng số bot sẽ xuất hiện
-    public float mode1BotDuration = 1.5f; // Thời gian bot tồn tại (giây)
-
-    [Header("Mode 2 Settings (Time Attack)")]
-    public int mode2TargetKills = 50;   // Tổng số kill cần đạt được
-
-    [Header("Live Stats (Read Only)")]
-    public bool isGameActive = false;
-    public float timer = 0f;
+    [Header("--- DOT SETTINGS ---")]
+    public GameObject dotPrefab; 
+    public int dotMode1Concurrent = 3; 
+    public float dotMode1Duration = 60f;
+    public float dotMode2Duration = 30f; 
     
-    public int botsSpawned = 0; // Đếm số bot ĐÃ XUẤT HIỆN
-    public int botsKilled = 0;  // Đếm số bot ĐÃ BẮN TRÚNG
+    // Biến thống kê
+    public bool isGameActive = false;
+    public bool isGameOver = false; // [MỚI] Trạng thái kết thúc để hiện điểm
+    
+    public float timer = 0f;
+    public int botsKilled = 0; 
+    public int botsSpawned = 0; // Đếm số lượng đã sinh ra (Quan trọng cho Mode 1)
     
     public int shotsFired = 0;
     public int shotsHit = 0;
 
-    private GameObject currentBotInstance; // Lưu tham chiếu con bot hiện tại để kiểm soát
+    private int currentActiveTargets = 0; // Số lượng mục tiêu đang sống
 
     private void Awake()
     {
@@ -40,232 +43,256 @@ public class GameManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    private void Start()
-    {
-        // Khi bấm Play, chưa start game ngay, chờ bắn nút Start
-        UpdateUI();
-    }
+    private void Start() { UpdateUI(); }
 
     private void Update()
     {
-        // Check phím F2 để đổi Mode (Chỉ đổi khi game KHÔNG chạy)
-        if (!isGameActive && Keyboard.current != null)
+        // Đổi Mode bằng F2 (Chỉ khi không chơi)
+        if (!isGameActive && Keyboard.current != null && Keyboard.current.f2Key.wasPressedThisFrame)
         {
-            if (Keyboard.current.f2Key.wasPressedThisFrame)
-            {
-                // Đảo ngược mode: 1 -> 2, 2 -> 1
-                selectedMode = (selectedMode == 1) ? 2 : 1;
-                Debug.Log("Đã đổi sang Mode: " + selectedMode);
-                UpdateUI();
-            }
+            selectedMode = (selectedMode == 1) ? 2 : 1;
+            isGameOver = false; // Reset trạng thái game over khi đổi mode
+            UpdateUI();
         }
 
         if (isGameActive)
         {
-            timer += Time.deltaTime;
-            if(gameUI != null) gameUI.UpdateTimer(timer);
-        }
-    }
-
-    // --- LOGIC BẮT ĐẦU GAME ---
-    public void StartGame(int modeOverride = 0)
-    {
-        // Nếu không truyền tham số (modeOverride = 0), dùng mode chỉnh trong Inspector
-        int modeToPlay = (modeOverride == 0) ? selectedMode : modeOverride;
-        selectedMode = modeToPlay; // Cập nhật lại biến global để các hàm khác biết
-
-        isGameActive = true;
-        timer = 0f;
-        
-        botsSpawned = 0;
-        botsKilled = 0;
-        shotsFired = 0;
-        shotsHit = 0;
-
-        Debug.Log($"Game Started! Mode: {selectedMode}");
-        
-        UpdateUI(); 
-        SpawnBot();
-    }
-
-    // --- LOGIC HỦY GAME ---
-    public void CancelGame()
-    {
-        isGameActive = false;
-        StopAllCoroutines(); // Dừng việc đếm giờ bot biến mất (Mode 1)
-
-        if (currentBotInstance != null) Destroy(currentBotInstance);
-
-        // Xóa sạch mọi bot còn sót (đề phòng)
-        GameObject[] existingBots = GameObject.FindGameObjectsWithTag("Enemy");
-        foreach (GameObject bot in existingBots) Destroy(bot);
-
-        // Reset về 0
-        timer = 0f; botsKilled = 0; botsSpawned = 0; shotsFired = 0; shotsHit = 0;
-        
-        UpdateUI(); 
-        Debug.Log("=== GAME CANCELLED ===");
-    }
-
-    public void RestartGame(int mode)
-    {
-        CancelGame();
-        StartGame(mode);
-    }
-
-    // --- LOGIC SPAWN BOT ---
-    public void SpawnBot()
-    {
-        if (!isGameActive) return;
-
-        // Kiểm tra điều kiện dừng TRƯỚC khi spawn
-        if (CheckEndGameCondition()) return;
-
-        // Sinh vị trí ngẫu nhiên
-        Bounds bounds = spawnArea.bounds;
-        float x = Random.Range(bounds.min.x, bounds.max.x);
-        float z = Random.Range(bounds.min.z, bounds.max.z);
-        float y = bounds.min.y; 
-
-        // Tạo bot mới
-        currentBotInstance = Instantiate(botPrefab, new Vector3(x,y,z), Quaternion.Euler(0, 180, 0));
-        botsSpawned++; // Tăng biến đếm số lượng bot đã xuất hiện
-
-        BotMovement botMovement = currentBotInstance.GetComponent<BotMovement>();
-        if (botMovement != null)
-        {
-            if (selectedMode == 1)
+            // Logic Timer
+            if (isDotScene)
             {
-                // Mode 1: Tắt di chuyển (Bot đứng yên)
-                botMovement.isMovingAllowed = false; 
+                timer -= Time.deltaTime;
+                if (timer <= 0) EndGame();
             }
             else
             {
-                // Mode 2 (hoặc các mode khác): Bật di chuyển
-                botMovement.isMovingAllowed = true; 
+                timer += Time.deltaTime;
+            }
+
+            if (gameUI != null) gameUI.UpdateTimer(timer);
+        }
+    }
+
+    public void StartGame(int modeOverride = 0)
+    {
+        int modeToPlay = (modeOverride == 0) ? selectedMode : modeOverride;
+        selectedMode = modeToPlay;
+
+        isGameActive = true;
+        isGameOver = false; // Tắt bảng kết quả đi
+        
+        botsKilled = 0; shotsFired = 0; shotsHit = 0; 
+        botsSpawned = 0; currentActiveTargets = 0;
+
+        // Setup Timer
+        if (isDotScene)
+        {
+            if (selectedMode == 1) timer = dotMode1Duration;
+            else timer = dotMode2Duration;
+        }
+        else
+        {
+            timer = 0f;
+        }
+
+        UpdateUI();
+
+        // Spawn ban đầu
+        if (isDotScene && selectedMode == 1)
+        {
+            for (int i = 0; i < dotMode1Concurrent; i++) SpawnTarget();
+        }
+        else
+        {
+            SpawnTarget();
+        }
+    }
+
+    public void RestartGame(int mode) { CancelGame(); StartGame(mode); }
+
+    public void CancelGame()
+    {
+        isGameActive = false;
+        isGameOver = false; // Cancel thì reset về menu luôn
+        StopAllCoroutines();
+
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy"); 
+        foreach (GameObject obj in enemies) Destroy(obj);
+
+        timer = 0f; botsKilled = 0; shotsFired = 0; shotsHit = 0;
+        UpdateUI();
+    }
+
+    public void SpawnTarget()
+    {
+        if (!isGameActive) return;
+        
+        // [QUAN TRỌNG] Check điều kiện dừng TRƯỚC khi spawn
+        // Bot Mode 1: Nếu đã spawn đủ 30 con rồi thì không spawn nữa -> End Game
+        if (!isDotScene && selectedMode == 1)
+        {
+            if (botsSpawned >= botMode1TotalSpawns)
+            {
+                // Chỉ End Game khi con bot cuối cùng đã biến mất (để tránh End ngay khi con thứ 30 vừa hiện ra)
+                if (currentActiveTargets <= 0) EndGame();
+                return;
             }
         }
-
-        // Nếu là Mode 1: Bắt đầu đếm ngược để bot tự biến mất
-        if (selectedMode == 1)
+        // Bot Mode 2: Check theo số kill
+        if (!isDotScene && selectedMode == 2 && botsKilled >= botMode2TargetKills) 
         {
-            StartCoroutine(BotLifeCycleRoutine(currentBotInstance));
+            EndGame(); 
+            return;
         }
+
+        // --- 1. XỬ LÝ VỊ TRÍ (Fix lỗi Bot bay) ---
+        Bounds bounds = spawnArea.bounds;
+        float x = Random.Range(bounds.min.x, bounds.max.x);
+        float z = Random.Range(bounds.min.z, bounds.max.z);
         
-        UpdateUI(); // Cập nhật số lượng (vd: 1/30)
+        float y = 0;
+        if (isDotScene)
+        {
+            // Dot: Random độ cao
+            y = Random.Range(bounds.min.y, bounds.max.y);
+        }
+        else
+        {
+            // Bot: Luôn ở mặt đất (min Y của box collider)
+            y = bounds.min.y;
+        }
+
+        Vector3 spawnPos = new Vector3(x, y, z);
+        GameObject prefabToSpawn = isDotScene ? dotPrefab : botPrefab;
+        Quaternion spawnRot = Quaternion.Euler(0, 180, 0);
+
+        GameObject newTarget = Instantiate(prefabToSpawn, spawnPos, spawnRot);
+        
+        botsSpawned++;      // Tăng tổng số đã sinh ra
+        currentActiveTargets++; // Tăng số lượng đang sống
+
+        // --- 2. CẤU HÌNH LOGIC DI CHUYỂN ---
+        if (isDotScene)
+        {
+            DotMovement dotMove = newTarget.GetComponent<DotMovement>();
+            if (dotMove != null) dotMove.isMovingAllowed = (selectedMode == 2);
+        }
+        else
+        {
+            BotMovement botMove = newTarget.GetComponent<BotMovement>();
+            if (botMove != null) botMove.isMovingAllowed = (selectedMode == 2);
+            
+            // Bot Mode 1: Tự hủy sau 1 khoảng thời gian (Reflex)
+            if (selectedMode == 1) StartCoroutine(BotLifeCycleRoutine(newTarget));
+        }
+
+        UpdateUI();
     }
 
-    // Coroutine riêng cho Mode 1: Đợi X giây rồi tự hủy bot
+    // Coroutine đếm ngược cho Bot Mode 1
     IEnumerator BotLifeCycleRoutine(GameObject botRef)
     {
-        yield return new WaitForSeconds(mode1BotDuration);
-
-        // Sau khi chờ xong, kiểm tra xem con bot đó còn sống không
+        yield return new WaitForSeconds(botMode1Duration);
+        
+        // Nếu hết giờ mà bot vẫn còn (chưa bị bắn chết)
         if (isGameActive && botRef != null)
         {
-            // Nếu còn sống -> Tức là người chơi bắn trượt (Miss)
             Destroy(botRef);
+            currentActiveTargets--; // Giảm số lượng đang sống
             
-            // Spawn con tiếp theo ngay lập tức
-            SpawnBot();
+            // Spawn con tiếp theo (Miss cũng tính là qua lượt)
+            SpawnTarget(); 
+            
+            // Cập nhật lại UI (để check xem đã hết 30 con chưa)
+            // Nếu đây là con thứ 30 vừa biến mất -> SpawnTarget sẽ gọi EndGame
+            if (!isDotScene && selectedMode == 1 && botsSpawned >= botMode1TotalSpawns)
+            {
+                EndGame();
+            }
         }
     }
 
-    // --- LOGIC XỬ LÝ SỰ KIỆN ---
+    public void RegisterShot() { if(isGameActive) { shotsFired++; UpdateUI(); } }
+    
+    public void RegisterHit()  { if(isGameActive) { shotsHit++; UpdateUI(); } }
 
-    public void RegisterShot()
-    {
-        if (!isGameActive) return;
-        shotsFired++;
-        UpdateUI(); 
-    }
-
-    public void RegisterHit()
-    {
-        if (!isGameActive) return;
-        shotsHit++;
-        UpdateUI(); 
-    }
-
-    // Hàm này được gọi từ BotHealth khi bot bị bắn chết (HP <= 0)
     public void RegisterKill()
     {
         if (!isGameActive) return;
         
         botsKilled++;
-        
-        // Nếu là Mode 1: Người chơi bắn trúng trước khi hết giờ -> Hủy coroutine đếm ngược cũ không cần thiết nữa (tự động logic spawn sẽ chạy)
-        // Nhưng đơn giản nhất là cứ để SpawnBot gọi tiếp
+        currentActiveTargets--; // Giảm số lượng đang sống
 
-        SpawnBot(); // Spawn con tiếp theo
-    }
-
-    // Kiểm tra xem đã kết thúc game chưa
-    private bool CheckEndGameCondition()
-    {
-        bool isEnded = false;
-
-        if (selectedMode == 1)
+        // Logic Spawn tiếp theo
+        if (isDotScene && selectedMode == 1)
         {
-            // Mode 1: Dừng khi ĐÃ SPAWN ĐỦ 30 CON (bất kể bắn trúng hay không)
-            // Lưu ý: SpawnBot được gọi để spawn con tiếp theo, nên check >= total
-            if (botsSpawned >= mode1TotalBots) isEnded = true;
+            SpawnTarget(); // Gridshot: Chết 1 đẻ 1
         }
-        else if (selectedMode == 2)
+        else
         {
-            // Mode 2: Dừng khi ĐÃ GIẾT ĐỦ 50 CON
-            if (botsKilled >= mode2TargetKills) isEnded = true;
+            // Bot Mode: Chết con này ra con kia
+            SpawnTarget();
         }
-
-        if (isEnded)
-        {
-            EndGame();
-            return true; // Báo hiệu để không spawn thêm nữa
-        }
-
-        return false;
+        UpdateUI();
     }
 
     private void EndGame()
     {
         isGameActive = false;
-        StopAllCoroutines();
+        isGameOver = true; // [FIX] Bật cờ Game Over để giữ bảng điểm
         
-        if (currentBotInstance != null) Destroy(currentBotInstance);
-
+        StopAllCoroutines();
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (GameObject obj in enemies) Destroy(obj);
+        
+        UpdateUI(); // Cập nhật lần cuối để hiện bảng kết quả
         Debug.Log("=== GAME OVER ===");
-        Debug.Log($"Mode: {selectedMode} | Kills: {botsKilled} | Time: {timer:F2}s");
     }
 
     void UpdateUI()
     {
         if (gameUI == null) return;
 
-        if (!isGameActive)
+        // --- [FIX] LOGIC HIỂN THỊ UI ---
+        
+        // 1. Nếu đang Game Over (Vừa chơi xong) -> GIỮ NGUYÊN ĐIỂM SỐ
+        if (isGameOver)
         {
-            gameUI.timerText.text = "00:00";
-            // Hiển thị tên Mode hiện tại
-            gameUI.scoreText.text = (selectedMode == 1) ? "Mode: Reflex" : "Mode: Time attack";
-            gameUI.accuracyText.text = "F2 to Change";
-            return;
+            gameUI.timerText.text = "FINISHED!";
+            // Không return, để nó chạy xuống dưới cập nhật điểm lần cuối
+        }
+        // 2. Nếu đang ở Menu (Chưa chơi, và không phải vừa xong game)
+        else if (!isGameActive)
+        {
+            gameUI.timerText.text = "PRESS START";
+            if(isDotScene)
+                gameUI.scoreText.text = (selectedMode == 1) ? "MODE: GRIDSHOT" : "MODE: TRACKING";
+            else 
+                gameUI.scoreText.text = (selectedMode == 1) ? "MODE: REFLEX" : "MODE: TIME ATTACK";
+            
+            gameUI.accuracyText.text = "F2 Change Mode";
+            return; // Thoát luôn, không hiện điểm số 0/0 làm gì
         }
 
+        // 3. Hiển thị thông số khi đang chơi (hoặc khi Game Over)
         float accuracy = (shotsFired > 0) ? (float)shotsHit / shotsFired * 100f : 0;
         
-        gameUI.UpdateTimer(timer);
+        // Chỉ update timer nếu đang chơi, nếu Game Over thì giữ chữ "FINISHED!"
+        if (isGameActive) gameUI.UpdateTimer(timer); 
+        
         gameUI.UpdateAccuracy(accuracy);
 
-        // Hiển thị điểm số tùy theo Mode
-        if (selectedMode == 1)
+        if (isDotScene)
         {
-            // Mode 1: Hiển thị số Bot đã giết / Tổng số cơ hội (30)
-            // Hoặc hiển thị tiến độ: Bot thứ mấy / 30
-            gameUI.scoreText.text = $"Score: {botsKilled} | {botsSpawned}";
+            if (selectedMode == 2) gameUI.scoreText.text = $"Score: {shotsHit}";
+            else gameUI.UpdateScore(botsKilled, 0);
         }
-        else
+        else // Bot Scene
         {
-            // Mode 2: Hiển thị số Bot đã giết / Mục tiêu (50)
-            gameUI.UpdateScore(botsKilled, mode2TargetKills);
+            if (selectedMode == 1)
+                // Mode Reflex: Hiện số Bot đã giết / Tổng số đã sinh ra (hoặc tổng giới hạn 30)
+                gameUI.scoreText.text = $"Score: {botsKilled}/{botMode1TotalSpawns}";
+            else
+                gameUI.UpdateScore(botsKilled, botMode2TargetKills);
         }
     }
 }

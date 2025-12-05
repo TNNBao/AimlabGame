@@ -1,86 +1,120 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using TMPro;
 
 public class HandgunFire : MonoBehaviour
 {
-    [SerializeField] AudioSource gunFire;
-    [SerializeField] GameObject handgun;
-    [SerializeField] bool canFire = true;
-    [SerializeField] GameObject extraCross;
-    [SerializeField] AudioSource emptyGunSound;
-    [SerializeField] GameObject muzzleFlash;
+    [Header("Weapon Settings")]
     [SerializeField] float weaponDamage = 50f;
-    public float toTarget;
+    [SerializeField] float fireRate = 0.25f;
+    
+    [Header("Ammo Settings")]
+    public int maxAmmo = 12;
+    public int currentAmmo;
+    public float reloadTime = 1.5f;
+    public bool isReloading = false;
+    public bool infiniteAmmo = false;
+
+    [Header("References")]
+    [SerializeField] AudioClip fireSound;   // [SỬA]
+    [SerializeField] AudioClip reloadSound; // [SỬA]
+    
+    [SerializeField] GameObject muzzleFlash;
+    [SerializeField] Animator gunAnim;
+    [SerializeField] GameObject extraCross;
+    [SerializeField] TextMeshProUGUI ammoText;
+
+    private bool canFire = true;
+    private AudioSource audioSource; // [MỚI]
+
+    void Start()
+    {
+        currentAmmo = maxAmmo;
+        // Tự tìm hoặc tạo AudioSource
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+
+        UpdateAmmoUI();
+        if (GameManager.Instance != null && GameManager.Instance.isDotScene) infiniteAmmo = true;
+    }
+
+    void OnEnable()
+    {
+        isReloading = false;
+        canFire = true;
+        UpdateAmmoUI();
+    }
 
     void Update()
     {
-        if (Mouse.current.leftButton.isPressed)
+        if (isReloading) return;
+
+        if ((currentAmmo <= 0 && !infiniteAmmo) || (Keyboard.current.rKey.wasPressedThisFrame && currentAmmo < maxAmmo && !infiniteAmmo))
         {
-            if (canFire == true)
-            {
-                if (GlobalAmmo.handgunAmmoCount == 0)
-                {
-                    canFire = false;
-                    StartCoroutine(EmptyGun());
-                }
-                else
-                {
-                    canFire = false;
-                    StartCoroutine(FiringGun());
-                }
-            }
+            StartCoroutine(Reload());
+            return;
+        }
+
+        if (Mouse.current.leftButton.wasPressedThisFrame && canFire && currentAmmo > 0)
+        {
+            StartCoroutine(FiringGun());
         }
     }
 
     IEnumerator FiringGun()
     {
-        // 1. Xử lý hiệu ứng bắn trước
-        toTarget = PlayerCasting.distanceFromTarget;
-        gunFire.Play();
+        canFire = false;
+        if (!infiniteAmmo) { currentAmmo--; UpdateAmmoUI(); }
+
+        // [SỬA]
+        if(audioSource && fireSound) audioSource.PlayOneShot(fireSound);
+        
         extraCross.SetActive(true);
-        GlobalAmmo.handgunAmmoCount -= 1;
-        handgun.GetComponent<Animator>().Play("HandgunFire");
         muzzleFlash.SetActive(true);
+        
+        gunAnim.Play("Fire", -1, 0f); // Check tên "Fire"
 
-        // Báo GameManager là đã bắn 1 viên (chỉ tính nếu game đang chạy)
-        GameManager.Instance.RegisterShot();
+        if (GameManager.Instance != null) GameManager.Instance.RegisterShot();
 
-        // 2. Kiểm tra trúng cái gì
         GameObject target = PlayerCasting.targetObject;
         if (target != null)
         {
-            // --- [LOGIC MỚI: Ưu tiên kiểm tra nút bấm] ---
-            MenuButton button = target.GetComponent<MenuButton>();
-            if (button != null)
-            {
-                button.OnHit(); // Kích hoạt nút (Start hoặc Cancel)
-            }
-            else 
-            {
-                // Nếu không phải nút thì mới kiểm tra xem có phải Bot không
-                BotHitbox hitbox = target.GetComponent<BotHitbox>();
-                if (hitbox != null)
-                {
-                    hitbox.OnHit(weaponDamage);
-                    GameManager.Instance.RegisterHit();
-                }
-            }
+             if (target.GetComponent<MenuButton>() != null) target.GetComponent<MenuButton>().OnHit();
+             else if (target.GetComponent<BotHitbox>() != null) {
+                 target.GetComponent<BotHitbox>().OnHit(weaponDamage);
+                 if (GameManager.Instance != null) GameManager.Instance.RegisterHit();
+             }
+             else if (target.GetComponent<DotTarget>() != null) {
+                 target.GetComponent<DotTarget>().OnHit();
+                 if (GameManager.Instance != null) GameManager.Instance.RegisterHit();
+             }
         }
 
-        yield return new WaitForSeconds(0.04f);
+        yield return new WaitForSeconds(0.05f);
         muzzleFlash.SetActive(false);
-        yield return new WaitForSeconds(0.46f);
-        handgun.GetComponent<Animator>().Play("New State");
         extraCross.SetActive(false);
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(fireRate);
         canFire = true;
     }
 
-    IEnumerator EmptyGun()
+    IEnumerator Reload()
     {
-        emptyGunSound.Play();
-        yield return new WaitForSeconds(0.6f);
-        canFire = true;
+        isReloading = true;
+        
+        // [SỬA]
+        if(audioSource && reloadSound) audioSource.PlayOneShot(reloadSound);
+        
+        gunAnim.Play("Reload", -1, 0f); // Check tên "Reload"
+
+        yield return new WaitForSeconds(reloadTime);
+        currentAmmo = maxAmmo;
+        isReloading = false;
+        UpdateAmmoUI();
+    }
+
+    void UpdateAmmoUI()
+    {
+        if (ammoText != null) ammoText.text = infiniteAmmo ? "∞" : $"{currentAmmo} / {maxAmmo}";
     }
 }
