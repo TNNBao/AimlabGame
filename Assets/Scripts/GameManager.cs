@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using StarterAssets;
 
 public class GameManager : MonoBehaviour
 {
@@ -22,9 +23,16 @@ public class GameManager : MonoBehaviour
     public GameObject dotPrefab; 
     public int dotMode1Concurrent = 3; 
     public float dotMode1Duration = 60f;
-    public float dotMode2Duration = 30f; 
+    public float dotMode2Duration = 30f;
+
+    [Header("--- UI REFERENCES ---")]
+    public GameObject pausePanel; // Kéo cái Panel vừa tạo vào đây
+    public UnityEngine.UI.Slider sensitivitySlider; // Kéo cái thanh trượt vào đây
+    public StarterAssets.FirstPersonController playerController; // Kéo nhân vật vào để chỉnh tốc độ chuột
+    public StarterAssetsInputs starterAssetsInputs;
     
     // Biến thống kê
+    public bool isPaused = false; 
     public bool isGameActive = false;
     public bool isGameOver = false; // [MỚI] Trạng thái kết thúc để hiện điểm
     
@@ -43,7 +51,15 @@ public class GameManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    private void Start() { UpdateUI(); }
+    private void Start() 
+    { 
+        UpdateUI(); 
+
+        if (starterAssetsInputs == null && playerController != null)
+        {
+            starterAssetsInputs = playerController.GetComponent<StarterAssetsInputs>();
+        }
+    }
 
     private void Update()
     {
@@ -53,6 +69,13 @@ public class GameManager : MonoBehaviour
             selectedMode = (selectedMode == 1) ? 2 : 1;
             isGameOver = false; // Reset trạng thái game over khi đổi mode
             UpdateUI();
+        }
+
+        // Logic Pause Game (ESC)
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            if (isPaused) ResumeGame();
+            else PauseGame();
         }
 
         if (isGameActive)
@@ -120,6 +143,69 @@ public class GameManager : MonoBehaviour
 
         timer = 0f; botsKilled = 0; shotsFired = 0; shotsHit = 0;
         UpdateUI();
+    }
+
+    public void PauseGame()
+    {
+        isPaused = true;
+        Time.timeScale = 0f; // Đóng băng thời gian
+        pausePanel.SetActive(true);
+        
+        // Mở khóa chuột để bấm nút
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        if (starterAssetsInputs != null) 
+        {
+            starterAssetsInputs.cursorInputForLook = false;
+            starterAssetsInputs.look = Vector2.zero;
+        }
+
+        // Nếu có slider, cập nhật giá trị hiện tại của chuột vào slider
+        if(sensitivitySlider != null && playerController != null)
+        {
+            // Tạm thời bỏ lắng nghe sự kiện
+            sensitivitySlider.onValueChanged.RemoveAllListeners(); 
+            
+            // Set giá trị
+            sensitivitySlider.value = playerController.RotationSpeed;
+            
+            // Gán lại sự kiện (Dynamic)
+            sensitivitySlider.onValueChanged.AddListener(SetSensitivity);
+        }
+    }
+
+    public void ResumeGame()
+    {
+        isPaused = false;
+        Time.timeScale = 1f; // Chạy lại thời gian
+        pausePanel.SetActive(false);
+
+        // Khóa chuột lại để bắn tiếp
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (starterAssetsInputs != null) 
+        {
+            starterAssetsInputs.cursorInputForLook = true;
+            // Reset input quay chuột để tránh bị giật camera cái vèo
+            starterAssetsInputs.look = Vector2.zero; 
+        }
+    }
+
+    public void BackToMainMenu()
+    {
+        Time.timeScale = 1f; // Nhớ trả lại thời gian trước khi chuyển scene
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    }
+
+    // Hàm này sẽ gắn vào sự kiện "On Value Changed" của Slider
+    public void SetSensitivity(float value)
+    {
+        if (playerController != null)
+        {
+            playerController.RotationSpeed = value;
+        }
     }
 
     public void SpawnTarget()
@@ -257,7 +343,7 @@ public class GameManager : MonoBehaviour
         // 1. Nếu đang Game Over (Vừa chơi xong) -> GIỮ NGUYÊN ĐIỂM SỐ
         if (isGameOver)
         {
-            gameUI.timerText.text = "FINISHED!";
+            // gameUI.timerText.text = "FINISHED!";
             // Không return, để nó chạy xuống dưới cập nhật điểm lần cuối
         }
         // 2. Nếu đang ở Menu (Chưa chơi, và không phải vừa xong game)

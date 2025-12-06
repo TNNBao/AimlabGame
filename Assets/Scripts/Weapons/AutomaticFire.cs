@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 using System.Collections;
 using TMPro;
 
@@ -49,6 +50,8 @@ public class AutomaticFire : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.isPaused) return;
+
         if (isReloading) return;
 
         // Xử lý nạp đạn
@@ -58,8 +61,10 @@ public class AutomaticFire : MonoBehaviour
             return;
         }
 
+        bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+
         // Xử lý Input chuột
-        if (Mouse.current.leftButton.isPressed && currentAmmo > 0)
+        if (Mouse.current.leftButton.isPressed && currentAmmo > 0 && !isPointerOverUI)
         {
             isFiring = true;
         }

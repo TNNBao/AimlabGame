@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 using System.Collections;
 using TMPro;
 
@@ -48,7 +49,11 @@ public class HandgunFire : MonoBehaviour
 
     void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.isPaused) return;
+
         if (isReloading) return;
+
+        bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
         if ((currentAmmo <= 0 && !infiniteAmmo) || (Keyboard.current.rKey.wasPressedThisFrame && currentAmmo < maxAmmo && !infiniteAmmo))
         {
@@ -56,7 +61,7 @@ public class HandgunFire : MonoBehaviour
             return;
         }
 
-        if (Mouse.current.leftButton.wasPressedThisFrame && canFire && currentAmmo > 0)
+        if (Mouse.current.leftButton.wasPressedThisFrame && canFire && currentAmmo > 0 && !isPointerOverUI)
         {
             StartCoroutine(FiringGun());
         }
