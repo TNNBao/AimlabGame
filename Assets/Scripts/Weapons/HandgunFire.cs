@@ -55,6 +55,11 @@ public class HandgunFire : MonoBehaviour
 
         bool isPointerOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
 
+        if (GameManager.Instance.isDotScene) 
+            infiniteAmmo = true;
+        else 
+            infiniteAmmo = GameManager.Instance.settingInfiniteAmmo;
+
         if ((currentAmmo <= 0 && !infiniteAmmo) || (Keyboard.current.rKey.wasPressedThisFrame && currentAmmo < maxAmmo && !infiniteAmmo))
         {
             StartCoroutine(Reload());

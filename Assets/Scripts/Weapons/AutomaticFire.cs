@@ -54,6 +54,12 @@ public class AutomaticFire : MonoBehaviour
 
         if (isReloading) return;
 
+        if (GameManager.Instance.isDotScene) 
+            infiniteAmmo = true;
+        else 
+            infiniteAmmo = GameManager.Instance.settingInfiniteAmmo;
+
+
         // Xử lý nạp đạn
         if ((currentAmmo <= 0 && !infiniteAmmo) || (Keyboard.current.rKey.wasPressedThisFrame && currentAmmo < maxAmmo && !infiniteAmmo))
         {

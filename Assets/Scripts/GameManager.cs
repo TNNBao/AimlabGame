@@ -30,6 +30,13 @@ public class GameManager : MonoBehaviour
     public UnityEngine.UI.Slider sensitivitySlider; // Kéo cái thanh trượt vào đây
     public StarterAssets.FirstPersonController playerController; // Kéo nhân vật vào để chỉnh tốc độ chuột
     public StarterAssetsInputs starterAssetsInputs;
+    public UnityEngine.UI.Toggle ammoToggle; // Kéo Toggle Ammo vào đây
+    public UnityEngine.UI.Toggle moveToggle; // Kéo Toggle Movement vào đây
+    public TMPro.TextMeshProUGUI switchSceneText; // Kéo Text của nút chuyển scene vào (để đổi tên)
+    
+    // Biến lưu trạng thái cài đặt
+    public bool settingInfiniteAmmo = false;
+    public bool settingBotMoving = true;
     
     // Biến thống kê
     public bool isPaused = false; 
@@ -53,11 +60,19 @@ public class GameManager : MonoBehaviour
 
     private void Start() 
     { 
-        UpdateUI(); 
+        UpdateUI();
+
+        if(ammoToggle) ammoToggle.isOn = settingInfiniteAmmo;
+        if(moveToggle) moveToggle.isOn = settingBotMoving; 
 
         if (starterAssetsInputs == null && playerController != null)
         {
             starterAssetsInputs = playerController.GetComponent<StarterAssetsInputs>();
+        }
+
+        if(switchSceneText != null)
+        {
+            switchSceneText.text = isDotScene ? "BOT MODE" : "DOT MODE";
         }
     }
 
@@ -208,6 +223,36 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // Gắn vào sự kiện OnValueChanged của Toggle Ammo
+    public void OnToggleAmmo(bool isOn)
+    {
+        settingInfiniteAmmo = isOn;
+    }
+
+    // Gắn vào sự kiện OnValueChanged của Toggle Movement
+    public void OnToggleMovement(bool isOn)
+    {
+        settingBotMoving = isOn;
+        // Lưu ý: Bot đang sống sẽ không đổi ngay, Bot spawn đợt sau mới đổi
+        // Nếu muốn đổi ngay lập tức cho bot đang sống:
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach(var enemy in enemies)
+        {
+            {
+                var m = enemy.GetComponent<BotMovement>();
+                if(m) m.isMovingAllowed = isOn;
+            }
+        }
+    }
+
+    // Gắn vào nút Switch Scene
+    public void OnSwitchSceneButton()
+    {
+        Time.timeScale = 1f; // Trả lại thời gian trước khi load
+        string sceneToLoad = isDotScene ? "Game_BOT" : "Game_DOT";
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneToLoad);
+    }
+
     public void SpawnTarget()
     {
         if (!isGameActive) return;
@@ -257,15 +302,23 @@ public class GameManager : MonoBehaviour
         currentActiveTargets++; // Tăng số lượng đang sống
 
         // --- 2. CẤU HÌNH LOGIC DI CHUYỂN ---
+        bool shouldMove = settingBotMoving;
+
+        if (selectedMode == 1) shouldMove = false;
+
         if (isDotScene)
         {
             DotMovement dotMove = newTarget.GetComponent<DotMovement>();
-            if (dotMove != null) dotMove.isMovingAllowed = (selectedMode == 2);
+            if (dotMove != null) 
+            {
+                dotMove.isMovingAllowed = shouldMove;
+                dotMove.SetMovementBounds(spawnArea.bounds);
+            }
         }
         else
         {
             BotMovement botMove = newTarget.GetComponent<BotMovement>();
-            if (botMove != null) botMove.isMovingAllowed = (selectedMode == 2);
+            if (botMove != null) botMove.isMovingAllowed = shouldMove;
             
             // Bot Mode 1: Tự hủy sau 1 khoảng thời gian (Reflex)
             if (selectedMode == 1) StartCoroutine(BotLifeCycleRoutine(newTarget));
@@ -331,6 +384,35 @@ public class GameManager : MonoBehaviour
         foreach (GameObject obj in enemies) Destroy(obj);
         
         UpdateUI(); // Cập nhật lần cuối để hiện bảng kết quả
+
+        // Xác định tên Mode để lưu
+        string modeName = isDotScene ? ("DOT_Mode" + selectedMode) : ("BOT_Mode" + selectedMode);
+        
+        float finalScore = 0;
+
+        if (!isDotScene && selectedMode == 2)
+        {
+            // Bot Mode 2 (Time Attack) -> Lưu THỜI GIAN
+            finalScore = timer; 
+        }
+        else if (isDotScene && selectedMode == 2)
+        {
+            // Dot Mode 2 (Tracking) -> Lưu số lần bắn trúng
+            finalScore = (float)shotsHit;
+        }
+        else
+        {
+            // Bot Mode 1 & Dot Mode 1 -> Lưu số Bot/Dot đã giết
+            finalScore = (float)botsKilled;
+        }
+
+        // Chỉ lưu nếu có thành tích
+        if (finalScore > 0)
+        {
+            ScoreManager.SaveScore(finalScore, modeName);
+        }
+
+        Debug.Log($"Đã lưu: {finalScore} vào bảng {modeName}");
         Debug.Log("=== GAME OVER ===");
     }
 
