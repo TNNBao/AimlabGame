@@ -257,7 +257,6 @@ public class GameManager : MonoBehaviour
     {
         if (!isGameActive) return;
         
-        // [QUAN TRỌNG] Check điều kiện dừng TRƯỚC khi spawn
         // Bot Mode 1: Nếu đã spawn đủ 30 con rồi thì không spawn nữa -> End Game
         if (!isDotScene && selectedMode == 1)
         {

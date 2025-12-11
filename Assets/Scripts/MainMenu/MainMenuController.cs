@@ -6,10 +6,12 @@ public class MainMenuController : MonoBehaviour
 {
     // Tên Scene mặc định muốn vào (ví dụ vào phòng bắn Bot trước)
     public string playSceneName = "Game_BOT";
+    public GameObject leaderboardPanel;
     public TMP_InputField nameInputField; 
 
     void Start()
     {
+        // PlayerPrefs.DeleteAll();
         if (PlayerPrefs.HasKey("LastPlayerName"))
         {
             string lastPlayer = PlayerPrefs.GetString("LastPlayerName");
@@ -51,6 +53,6 @@ public class MainMenuController : MonoBehaviour
     // Nút Leaderboard
     public void OnLeaderboardButton()
     {
-        Debug.Log("Mở bảng xếp hạng...");
+        leaderboardPanel.SetActive(true);
     }
 }
