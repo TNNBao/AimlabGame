@@ -56,6 +56,8 @@ Material:
     - _Metallic: 0.167
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 1
-    m_Colors: []
+    m_Colors:
+    - _BaseColor: {r: 0.7699893, g: 0.7877028, b: 0.8113208, a: 1}
+    - _Color: {r: 0.7699893, g: 0.7877028, b: 0.8113208, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

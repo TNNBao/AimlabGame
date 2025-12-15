@@ -418,8 +418,6 @@ public class GameManager : MonoBehaviour
     void UpdateUI()
     {
         if (gameUI == null) return;
-
-        // --- [FIX] LOGIC HIỂN THỊ UI ---
         
         // 1. Nếu đang Game Over (Vừa chơi xong) -> GIỮ NGUYÊN ĐIỂM SỐ
         if (isGameOver)
@@ -430,14 +428,14 @@ public class GameManager : MonoBehaviour
         // 2. Nếu đang ở Menu (Chưa chơi, và không phải vừa xong game)
         else if (!isGameActive)
         {
-            gameUI.timerText.text = "PRESS START";
+            gameUI.timerText.text = "READY";
             if(isDotScene)
-                gameUI.scoreText.text = (selectedMode == 1) ? "MODE: GRIDSHOT" : "MODE: TRACKING";
+                gameUI.scoreText.text = (selectedMode == 1) ? "GRIDSHOT" : "TRACKING";
             else 
-                gameUI.scoreText.text = (selectedMode == 1) ? "MODE: REFLEX" : "MODE: TIME ATTACK";
+                gameUI.scoreText.text = (selectedMode == 1) ? "REFLEX" : "TIME ATTACK";
             
-            gameUI.accuracyText.text = "F2 Change Mode";
-            return; // Thoát luôn, không hiện điểm số 0/0 làm gì
+            // gameUI.accuracyText.text = "F2 Change Mode";
+            return;
         }
 
         // 3. Hiển thị thông số khi đang chơi (hoặc khi Game Over)
@@ -450,14 +448,14 @@ public class GameManager : MonoBehaviour
 
         if (isDotScene)
         {
-            if (selectedMode == 2) gameUI.scoreText.text = $"Score: {shotsHit}";
+            if (selectedMode == 2) gameUI.scoreText.text = $"{shotsHit}";
             else gameUI.UpdateScore(botsKilled, 0);
         }
         else // Bot Scene
         {
             if (selectedMode == 1)
                 // Mode Reflex: Hiện số Bot đã giết / Tổng số đã sinh ra (hoặc tổng giới hạn 30)
-                gameUI.scoreText.text = $"Score: {botsKilled}/{botMode1TotalSpawns}";
+                gameUI.scoreText.text = $"{botsKilled}/{botMode1TotalSpawns}";
             else
                 gameUI.UpdateScore(botsKilled, botMode2TargetKills);
         }

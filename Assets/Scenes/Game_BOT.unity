@@ -2321,41 +2321,21 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1959356118}
-    - target: {fileID: 1185980098968732340, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
+    - target: {fileID: 2696269567079793142, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
         type: 3}
-      propertyPath: ammoCollect
+      propertyPath: m_Camera
       value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 1611747191786197666, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 1914262873511751024, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 2732634789682762809, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 3180284961561807658, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 4336880571568303860, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1959356118}
     - target: {fileID: 5298186440024411486, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
         type: 3}
       propertyPath: m_Name
       value: Map
       objectReference: {fileID: 0}
+    - target: {fileID: 6044372192898725796, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
+        type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 1959356118}
     - target: {fileID: 6339688737927196841, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
         type: 3}
       propertyPath: actionText
@@ -2366,16 +2346,6 @@ PrefabInstance:
       propertyPath: actionDisplay
       value: 
       objectReference: {fileID: 1603246637}
-    - target: {fileID: 6548249335599227227, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 6660814816470104802, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
-        type: 3}
-      propertyPath: ammoCollect
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 8446816706881118950, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2426,6 +2396,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9217986968561456540, guid: 9bb288e1819d4054fa2eb7d69a55ad26,
+        type: 3}
+      propertyPath: m_Camera
+      value: 
+      objectReference: {fileID: 1959356118}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

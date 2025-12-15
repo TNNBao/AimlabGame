@@ -7,6 +7,7 @@ public class MainMenuController : MonoBehaviour
     // Tên Scene mặc định muốn vào (ví dụ vào phòng bắn Bot trước)
     public string playSceneName = "Game_BOT";
     public GameObject leaderboardPanel;
+    public GameObject guidePanel;
     public TMP_InputField nameInputField; 
 
     void Start()
@@ -47,7 +48,7 @@ public class MainMenuController : MonoBehaviour
     // Hàm mở hướng dẫn 
     public void OnGuideButton()
     {
-        Debug.Log("Hiện bảng hướng dẫn...");
+        guidePanel.SetActive(true);
     }
 
     // Nút Leaderboard

@@ -23,12 +23,12 @@ public class GameUI : MonoBehaviour
     // Cập nhật điểm (Số kill / Mục tiêu)
     public void UpdateScore(int currentKills, int targetKills)
     {
-        scoreText.text = $"Score: {currentKills} / {targetKills}";
+        scoreText.text = $"{currentKills} / {targetKills}";
     }
 
     // Cập nhật độ chính xác
     public void UpdateAccuracy(float accuracy)
     {
-        accuracyText.text = $"Accuracy: {accuracy:F1}%"; // F1 là lấy 1 số thập phân
+        accuracyText.text = $"{accuracy:F1}%"; // F1 là lấy 1 số thập phân
     }
 }
