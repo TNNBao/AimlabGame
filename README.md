@@ -8,7 +8,7 @@ A 3D aim trainer game project similar to Aim Lab and Valorant's shooting range. 
 
 * **Diegetic UI:** Interact with the game system directly in the 3D environment (shoot the `Start` / `Cancel` buttons to control the game flow) without needing an external mouse cursor.
 * **Detailed Hitbox System:** Damage detection based on Bot body parts (Headshot x3, Body x1, Legs x0.6).
-* **Smart AI Bots:** Integrated with Mixamo Animations, Bots can stand still (Static) or dodge/move (Moving/Strafing).
+* **Bots:** Integrated with Mixamo Animations, Bots can stand still (Static) or dodge/move (Moving/Strafing).
 * **Seamless Transitions:** Quickly switch between Modes and Scenes using shortcuts (`F2`, `F3`) without going through the Main Menu, retaining mouse sensitivity and weapon configurations.
 
 ---
